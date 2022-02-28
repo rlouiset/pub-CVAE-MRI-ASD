@@ -1,7 +1,7 @@
 # Contrastive-Machine-Learning-reveals-the-structure-of-individual-variation-in-ASD
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.6304004.svg)](https://doi.org/10.5281/zenodo.6304004)
+
 Code and materials for paper "Contrastive machine learning reveals the structure of neuroanatomical variation within Autism"
-
-
 
 * [Notebooks/](Notebooks/)
   * [01-Train-AutoEncoders.ipynb](Notebooks/01-Train-AutoEncoders.ipynb) Trains VAE and CVAE autoencoders
