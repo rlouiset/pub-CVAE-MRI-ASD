@@ -7,8 +7,6 @@ from tensorflow.keras.layers import *
 from tensorflow.keras import backend as K
 from tensorflow.keras.models import Model
 from tensorflow.keras.losses import mse
-import os
-import pandas as pd
 
 # from glob import glob
 

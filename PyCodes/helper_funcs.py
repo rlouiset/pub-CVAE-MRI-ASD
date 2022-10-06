@@ -11,7 +11,6 @@ from sklearn.decomposition import PCA
 
 default_keys = ['ADOS_Total', 'ADOS_Social', 'DSMIVTR', 'AgeAtScan', 'Sex', 'ScannerID', 'ScanSiteID', 'FIQ']
 
-
 def get_weights(fdir=None):
     if not fdir:
         fdir = '/mmfs1/data/aglinska/tf_outputs/CVAE/'
