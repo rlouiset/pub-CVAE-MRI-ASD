@@ -42,7 +42,7 @@ if device_name != '/device:GPU:0':
     raise SystemError('GPU device not found')
 
 # LOAD Data
-arr = np.load("/neurospin/psy_sbox/rl264746/ABIDE-Anat-64iso-S982.npz")
+arr = np.load("/neurospin/psy_sbox/rl264746/ABIDE-Anat-64iso-S982_v2.npz")
 ABIDE_data = arr['data']
 ABIDE_subs = arr['subs']
 nsubs = ABIDE_data.shape[0]
