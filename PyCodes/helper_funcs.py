@@ -7,7 +7,6 @@ import pandas as pd
 from sklearn.metrics import silhouette_score
 from scipy.spatial.distance import pdist
 from scipy.spatial.distance import squareform
-import seaborn as sns
 from sklearn.decomposition import PCA
 
 default_keys = ['ADOS_Total', 'ADOS_Social', 'DSMIVTR', 'AgeAtScan', 'Sex', 'ScannerID', 'ScanSiteID', 'FIQ']
@@ -437,10 +436,11 @@ def plot_pca_rsa(keys, df, ABIDE_data, patients, encs, xlbls=['BG', 'SL', 'VAE']
 
     n_components = max(np.nonzero(reducer.explained_variance_ratio_ > thresh)[0]) + 1
 
-    rdms = [make_RDM(components[patients[~isnan], i]) for i in range(n_components)]
+    # TODO: fix seaborn
+    """rdms = [make_RDM(components[patients[~isnan], i]) for i in range(n_components)]
     f, ax = plt.subplots(1, 3, figsize=(15, 5))
 
-    [sns.heatmap(rdms[i], cbar=[], ax=ax[i]) for i in range(n_components)]
+    [sns.heatmap(rdms[i], cbar=[], ax=ax[i]) for i in range(n_components)]"""
 
     f, ax = plt.subplots(1, 3, figsize=(15, 5))
     res = list()
