@@ -24,11 +24,6 @@ from matplotlib import pyplot as plt
 import numpy as np
 import pandas as pd
 
-import pickle
-from sklearn.metrics import silhouette_score
-from scipy.spatial.distance import pdist
-from scipy.spatial.distance import squareform
-
 # Run GPU test
 import tensorflow as tf
 import timeit
