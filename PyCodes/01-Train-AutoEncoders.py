@@ -87,7 +87,7 @@ loss = list()
 fn = '../records/science_reproducibility/VAE_weights'
 
 nbatches = 1e6
-for i in tqdm(range(1, nbatches)):
+for i in tqdm(range(1, int(nbatches))):
 
     batch_idx = np.random.randint(low=0, high=ABIDE_data.shape[0], size=batch_size)
     data_batch = ABIDE_data[batch_idx, :, :, :]
@@ -133,7 +133,7 @@ else:
     plot_trainProgress(loss,im,im1)
 
 nbatches = 1e6
-for i in tqdm(range(1, nbatches)):
+for i in tqdm(range(1, int(nbatches))):
 
     DX_batch = DX_subs[np.random.randint(low=0, high=DX_subs.shape[0], size=batch_size), :, :, :]
     TD_batch = TD_subs[np.random.randint(low=0, high=TD_subs.shape[0], size=batch_size), :, :, :]
@@ -148,7 +148,7 @@ for i in tqdm(range(1, nbatches)):
     im, im1, ss = cvae_query(ABIDE_data, s_encoder, z_encoder, cvae_decoder)
 
     if np.mod(i, 5) == 0:  # Plot training progress
-        plot_trainProgress(loss, im, im1);
+        plot_trainProgress(loss, im, im1)
         plot_four(DX_batch, TD_batch, z_encoder, s_encoder, cvae_decoder, cvae, idx=0)
         plot_four(DX_batch, TD_batch, z_encoder, s_encoder, cvae_decoder, cvae, idx=1)
 
