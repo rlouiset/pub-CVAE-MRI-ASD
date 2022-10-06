@@ -9,6 +9,8 @@ if device_name != '/device:GPU:0':
     raise SystemError('GPU device not found')
 print('Found GPU at: {}'.format(device_name))
 
+from importlib import reload
+from helper_funcs import *
 from make_models2 import *
 
 # Make tqdm work for notebooks
@@ -16,8 +18,17 @@ from functools import partial
 from tqdm import tqdm
 tqdm = partial(tqdm, position=0, leave=True)
 
+import os
+from matplotlib import pyplot as plt
+import seaborn as sns
+
 import numpy as np
 import pandas as pd
+
+import pickle
+from sklearn.metrics import silhouette_score
+from scipy.spatial.distance import pdist
+from scipy.spatial.distance import squareform
 
 # Run GPU test
 import tensorflow as tf
@@ -30,36 +41,6 @@ if device_name != '/device:GPU:0':
         'configured to use a GPU.  Change this in Notebook Settings via the '
         'command palette (cmd/ctrl-shift-P) or the Edit menu.\n\n')
     raise SystemError('GPU device not found')
-
-
-def cpu():
-    with tf.device('/cpu:0'):
-        random_image_cpu = tf.random.normal((100, 100, 100, 3))
-        net_cpu = tf.keras.layers.Conv2D(32, 7)(random_image_cpu)
-        return tf.math.reduce_sum(net_cpu)
-
-
-def gpu():
-    with tf.device('/device:GPU:0'):
-        random_image_gpu = tf.random.normal((100, 100, 100, 3))
-        net_gpu = tf.keras.layers.Conv2D(32, 7)(random_image_gpu)
-        return tf.math.reduce_sum(net_gpu)
-
-
-# We run each op once to warm up; see: https://stackoverflow.com/a/45067900
-cpu()
-gpu()
-
-# Run the op several times.
-print('Time (s) to convolve 32x7x7x3 filter over random 100x100x100x3 images '
-      '(batch x height x width x channel). Sum of ten runs.')
-print('CPU (s):')
-cpu_time = timeit.timeit('cpu()', number=10, setup="from __main__ import cpu")
-print(cpu_time)
-print('GPU (s):')
-gpu_time = timeit.timeit('gpu()', number=10, setup="from __main__ import gpu")
-print(gpu_time)
-print('GPU speedup over CPU: {}x'.format(int(cpu_time / gpu_time)))
 
 # LOAD Data
 arr = np.load("/neurospin/psy_sbox/rl264746/ABIDE-Anat-64iso-S982.npz")
@@ -92,7 +73,6 @@ latent_dim = 32
 batch_size = 16
 disentangle = False
 gamma = 100
-
 encoder, decoder, vae = get_MRI_VAE_3D(input_shape=(64, 64, 64, 1),
                                        latent_dim=32,
                                        batch_size=batch_size,
@@ -105,7 +85,7 @@ encoder, decoder, vae = get_MRI_VAE_3D(input_shape=(64, 64, 64, 1),
                                        bias=True)
 
 loss = list()
-fn = '../recorde/science_reproducibility/VAE_weights'
+fn = '../records/science_reproducibility/VAE_weights'
 
 nbatches = 1e6
 for i in tqdm(range(1, nbatches)):
@@ -123,6 +103,58 @@ for i in tqdm(range(1, nbatches)):
 
     if np.mod(i, 100) == 0:  # Save every 100 batches
         vae.save_weights(fn)
+
+    if mse < .005:
+        break
+
+
+# train CVAE
+latent_dim = 16
+batch_size = 16
+beta = 1
+gamma = 100
+disentangle = True
+cvae, z_encoder, s_encoder, cvae_decoder = get_MRI_CVAE_3D(latent_dim=latent_dim, beta=beta,
+                                                           disentangle=disentangle, gamma=gamma, bias=True,
+                                                           batch_size=batch_size)
+loss = list()
+fn = '../records/science_reproducibility/CVAE_weights'
+
+# initial check
+DX_batch = DX_subs[np.random.randint(low=0,high=DX_subs.shape[0],size=batch_size),:,:,:]
+TD_batch = TD_subs[np.random.randint(low=0,high=TD_subs.shape[0],size=batch_size),:,:,:]
+
+if len(loss)==0:
+    loss.append(np.nan)
+    im,im1,ss = cvae_query(ABIDE_data,s_encoder,z_encoder,cvae_decoder)
+    plot_trainProgress(loss,im,im1)
+    loss = list()
+else:
+    im,im1,ss = cvae_query(ABIDE_data,s_encoder,z_encoder,cvae_decoder)
+    plot_trainProgress(loss,im,im1)
+
+nbatches = 1e6
+for i in tqdm(range(1, nbatches)):
+
+    DX_batch = DX_subs[np.random.randint(low=0, high=DX_subs.shape[0], size=batch_size), :, :, :]
+    TD_batch = TD_subs[np.random.randint(low=0, high=TD_subs.shape[0], size=batch_size), :, :, :]
+
+    hist = cvae.train_on_batch([DX_batch, TD_batch])
+    loss.append(hist)
+
+    mse = ((np.array([DX_batch, TD_batch]) - np.array(cvae.predict([DX_batch, TD_batch]))[:, :, :, :, :, 0]) ** 2).mean()
+
+    assert not np.isnan(hist), 'loss is NaN - somethings wrong'
+
+    im, im1, ss = cvae_query(ABIDE_data, s_encoder, z_encoder, cvae_decoder)
+
+    if np.mod(i, 5) == 0:  # Plot training progress
+        plot_trainProgress(loss, im, im1);
+        plot_four(DX_batch, TD_batch, z_encoder, s_encoder, cvae_decoder, cvae, idx=0)
+        plot_four(DX_batch, TD_batch, z_encoder, s_encoder, cvae_decoder, cvae, idx=1)
+
+    if np.mod(i, 101) == 0:  # Save every 100 batches
+        cvae.save_weights(fn)
 
     if mse < .005:
         break
