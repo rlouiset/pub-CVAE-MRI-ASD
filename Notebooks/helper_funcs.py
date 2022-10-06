@@ -2,6 +2,7 @@ import os
 import numpy as np
 from matplotlib import pyplot as plt
 import umap
+from IPython import display
 import time
 import pandas as pd
 from sklearn.metrics import silhouette_score
@@ -323,6 +324,11 @@ def net_plot(im,im1):
     plt.imshow(im);
 
 def plot_trainProgress(loss,im,im1):
+
+    display.clear_output(wait=True);
+    display.display(plt.gcf());
+    #time.sleep(1.0)
+
     plt.figure(figsize=np.array((7,5)) );
 
     plt.subplot(2,2,1);
